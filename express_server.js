@@ -34,6 +34,25 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
+//create a short URL
+app.post("/urls/new", (req, res) => {
+  let longURL = req.body.longURL;
+  if (!longURL.includes('www')) {
+    longURL = 'http://www.' + longURL;
+  } else if (!longURL.includes('http')) {
+    longURL = 'http://' + longURL;
+  }
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = longURL;
+  console.log(urlDatabase);
+  res.redirect('/urls/'+ shortURL);   
+});
+
 // delete a URL
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
@@ -62,27 +81,10 @@ app.post('/urls/:id', (req, res) => {
 // redirect to full URL from shortURL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
-  if (!longURL.includes('www')) {
-    longURL = 'http://www.' + longURL;
-  } else if (!longURL.includes('http')) {
-    longURL = 'http://' + longURL;
-  }
   res.redirect(302, longURL);
 });
 
-app.get("/urls/u/new", (req, res) => {
-  res.render("urls_new");
-});
 
-//create a short URL
-app.post("/urls/u/new", (req, res) => {
-  // console.log(req.body);  // debug statement to see POST parameters
-  let longURL = req.body.longURL;
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
-  console.log(urlDatabase);
-  res.redirect('/urls/'+ shortURL);   
-});
 
 
 
