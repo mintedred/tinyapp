@@ -1,14 +1,16 @@
-var morgan = require('morgan')
-var express = require("express");
-var app = express();
-var PORT = process.env.PORT || 8080; // default port 8080
+const morgan = require('morgan')
+const express = require("express");
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser')
+const PORT = process.env.PORT || 8080; // default port 8080
+const app = express();
+app.use(cookieParser())
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.set("view engine", "ejs");
 
 
-var urlDatabase = {
+let urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
@@ -84,7 +86,11 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(302, longURL);
 });
 
-
+// Login form submission
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect('/urls');
+});
 
 
 
