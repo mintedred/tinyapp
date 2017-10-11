@@ -25,7 +25,11 @@ function generateRandomString() {
 }
 
 app.get("/urls", (req, res) => {
-  res.render("urls_index", {urls: urlDatabase});
+  let templateVars = {
+    username: req.cookies["username"],
+    urls: urlDatabase
+  };
+  res.render("urls_index", templateVars);
 });
 
 app.get("/", (req, res) => {
@@ -38,7 +42,10 @@ app.get("/urls.json", (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_new", templateVars);
 });
 
 //create a short URL
@@ -51,7 +58,7 @@ app.post("/urls/new", (req, res) => {
   }
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = longURL;
-  console.log(urlDatabase);
+  // console.log(urlDatabase);
   res.redirect('/urls/'+ shortURL);   
 });
 
@@ -63,7 +70,11 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // individual shortURL page
 app.get("/urls/:id", (req, res) => {
-  let templateVars = {shortURL: req.params.id, urls: urlDatabase };
+  let templateVars = {
+    username: req.cookies["username"],
+    shortURL: req.params.id, 
+    urls: urlDatabase 
+  };
   res.render("urls_show", templateVars)
 })
 
