@@ -44,14 +44,19 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let templateVars = {shortURL: req.params.id, urls: urlDatabase };
   res.render("urls_show", templateVars)
-});
+})
 
 // update an individual URL
 app.post('/urls/:id', (req, res) => {
   let newURL = req.body.longURL;
   let shortURL = req.params.id;
+  if (!newURL.includes('www')) {
+    newURL = 'http://www.' + newURL;
+  } else if (!lmzODw.includes('http')) {
+    newURL = 'http://' + newURL;
+  }
   urlDatabase[shortURL] = newURL;
-  res.redirect('/');
+  res.redirect('/urls');
 });
 
 // redirect to full URL from shortURL
@@ -65,17 +70,18 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(302, longURL);
 });
 
-app.get("/urls/new", (req, res) => {
+app.get("/urls/u/new", (req, res) => {
   res.render("urls_new");
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  var longURL = req.body.longURL;
-  var shortURL = generateRandomString();
+//create a short URL
+app.post("/urls/u/new", (req, res) => {
+  // console.log(req.body);  // debug statement to see POST parameters
+  let longURL = req.body.longURL;
+  let shortURL = generateRandomString();
   urlDatabase[shortURL] = longURL;
-  //console.log(urlDatabase);
-  res.redirect('/u/'+ shortURL);   
+  console.log(urlDatabase);
+  res.redirect('/urls/'+ shortURL);   
 });
 
 
