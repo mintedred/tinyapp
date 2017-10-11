@@ -22,39 +22,39 @@ function generateRandomString() {
   return text;
 }
 
-app.get("/", (req, res) => {
-  res.end("Hello!");
+app.get("/urls", (req, res) => {
+  res.render("urls_index", {urls: urlDatabase});
 });
 
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b>World</b></body></html>\n");
+app.get("/", (req, res) => {
+  res.redirect("/urls");
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-
-
-app.get("/urls", (req, res) => {
-  res.render("urls_index", {urls: urlDatabase});
-});
-
+// delete a URL
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 })
 
+// individual shortURL page
 app.get("/urls/:id", (req, res) => {
   let templateVars = {shortURL: req.params.id, urls: urlDatabase };
   res.render("urls_show", templateVars)
 });
 
-// update shortURL
-app.get('/urls/<%= shortURL %>', (req, res) => {
-
+// update an individual URL
+app.post('/urls/:id', (req, res) => {
+  let newURL = req.body.longURL;
+  let shortURL = req.params.id;
+  urlDatabase[shortURL] = newURL;
+  res.redirect('/');
 });
 
+// redirect to full URL from shortURL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
   if (!longURL.includes('www')) {
@@ -74,9 +74,7 @@ app.post("/urls", (req, res) => {
   var longURL = req.body.longURL;
   var shortURL = generateRandomString();
   urlDatabase[shortURL] = longURL;
-  
-  console.log(urlDatabase);
-
+  //console.log(urlDatabase);
   res.redirect('/u/'+ shortURL);   
 });
 
