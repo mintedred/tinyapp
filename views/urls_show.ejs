@@ -7,5 +7,7 @@
 
 <% include partials/_header %>
 
-<p>Full URL: <%=  %> </p>
-<p>Shortened URL: <%= shortURL %> </p>
+<p>ShortURL: <%= shortURL %> </p>
+<form method="POST" action="/urls/<%= shortURL %>">
+<input type="text" name="url" value="<%= urls[shortURL] %>" /><input type='submit' value='update' />
+</form>

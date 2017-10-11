@@ -4,6 +4,7 @@ var app = express();
 var PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(morgan('dev'));
 app.set("view engine", "ejs");
 
 
@@ -20,8 +21,6 @@ function generateRandomString() {
   }
   return text;
 }
-
-app.use(morgan('dev'));
 
 app.get("/", (req, res) => {
   res.end("Hello!");
@@ -41,10 +40,21 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", {urls: urlDatabase});
 });
 
-// app.get("/urls/:id", (req, res) => {
-//   let templateVars = {shortURL: req.params.id };
-//   res.render("urls_show", templateVars)
-// });
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+})
+
+app.get("/urls/:id", (req, res) => {
+  let templateVars = {shortURL: req.params.id, urls: urlDatabase };
+  res.render("urls_show", templateVars)
+});
+
+// update shortURL
+app.get('/urls/<%= shortURL %>', (req, res) => {
+
+});
+
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
   if (!longURL.includes('www')) {
