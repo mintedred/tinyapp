@@ -84,7 +84,7 @@ app.post('/urls/:id', (req, res) => {
   let shortURL = req.params.id;
   if (!newURL.includes('www')) {
     newURL = 'http://www.' + newURL;
-  } else if (!lmzODw.includes('http')) {
+  } else if (!newURL.includes('http')) {
     newURL = 'http://' + newURL;
   }
   urlDatabase[shortURL] = newURL;
