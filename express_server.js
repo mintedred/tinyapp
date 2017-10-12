@@ -17,7 +17,7 @@ const urlDatabase = {
 
 const users = {
   "user1": {
-    id: "user1", 
+    id: "ramdone223", 
     email: "user1@example.com", 
     password: "red"
   },
@@ -25,6 +25,11 @@ const users = {
     id: "user2", 
     email: "user2@example.com", 
     password: "blue"
+  },
+  "corina": {
+    id: "ljfs88", 
+    email: "corina@example.com", 
+    password: "red"
   }
 };
 
@@ -39,11 +44,9 @@ function generateRandomString() {
 
 
 const findValue = (value, valueKey, obj) => {
-  for (prop in users) {
-    if (users[prop][valueKey] === value) {
+  for (prop in obj) {
+    if (obj[prop][valueKey] === value) {
       return true;
-    } else {
-      return false;
     }
   }
 }
@@ -155,12 +158,13 @@ app.get("/u/:shortURL", (req, res) => {
 // Login form page
 app.post("/login", (req, res) => {
   let templateVars = {
+    users: users,
     user: (findValue(req.cookies['user_id'], "user_id", users))
   }; 
   let currentUser;
   let submittedEmail = req.body.email;
   // Verify email
-  if (!findValue(submittedEmail, "email", users)) { 
+  if (findValue(submittedEmail, "email", users) === false) { 
     res.status(403).send('User with that email cannot be found. Please <a href="/login">try again</a>.')
   } else {
     // Verify email
@@ -179,16 +183,17 @@ app.post("/login", (req, res) => {
       res.status(403).send('Wrong password. Please try <a href="/login">again</a>.')
     }
   }
-  // res.redirect('/urls', templateVars);
 });
 
 // Login page
 app.get('/login', (req, res) => {
   let templateVars = {
+    cookies: req.cookies['user_id'],
+    // users: users,
     user: (findValue(req.cookies['user_id'], "user_id", users))  
   };
   console.log(templateVars);
-  res.render('login');
+  res.render('login', templateVars);
 });
 
 // Logout button
