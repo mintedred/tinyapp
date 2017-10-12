@@ -10,9 +10,22 @@ app.use(morgan('dev'));
 app.set("view engine", "ejs");
 
 
-let urlDatabase = {
+const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+const users = {
+  "user1": {
+    id: "user1", 
+    email: "user1@example.com", 
+    password: "red"
+  },
+ "user2": {
+    id: "user2", 
+    email: "user2@example.com", 
+    password: "blue"
+  }
 };
 
 function generateRandomString() {
@@ -110,9 +123,22 @@ app.post('/logout', (req, res) => {
 });
 
 // Registration page
-
 app.get('/register', (req, res) => {
   res.render('register')
+});
+
+app.post('/register', (req, res) => {
+  let userID = generateRandomString();
+  let userName = req.body.username;
+  let userEmail = req.body.email;
+  let userPass = req.body.password;
+  let user = {};
+  user.id = userID;
+  user.email = userEmail;
+  user.password = userPass;
+  users[userName] = user;
+  res.cookie("username", req.body.username);
+  res.redirect('urls');
 })
 
 app.listen(PORT, () => {
