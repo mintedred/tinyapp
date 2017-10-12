@@ -136,10 +136,29 @@ app.post('/register', (req, res) => {
   user.id = userID;
   user.email = userEmail;
   user.password = userPass;
-  users[userName] = user;
-  res.cookie("username", req.body.username);
-  res.redirect('urls');
-})
+
+  const emailRegistered = function(userEmail, users) {
+    for (prop in users) {
+      if (users[prop].email === userEmail) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+  // Handling registration errors
+  if (user.email === " ") {
+    res.send(404, 'Email not valid. Please go back and <a href="/register">try again</a>.');
+  } else if (user.password === " ") {
+    res.send(404, 'You did not enter a password. Please go back and <a href="/register">try again</a>.');
+  } else if ((emailRegistered(userEmail, users) === true)) {   
+    res.send(400, 'Email is already registered. Please go back and <a href="/register">try again</a>.')
+  } else { 
+    users[userName] = user;
+    res.cookie("username", req.body.username);
+    res.redirect('urls');
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
