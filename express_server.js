@@ -37,9 +37,17 @@ function generateRandomString() {
   return text;
 }
 
+function findUser(user_id) {
+  for (user in users) {
+    if (users[user].id == user_id) {
+      return users[user];
+    }
+  }
+}
+
 app.get("/urls", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    user: findUser(req.cookies['user_id']),
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -51,75 +59,6 @@ app.get("/", (req, res) => {
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
-});
-
-
-app.get("/urls/new", (req, res) => {
-  let templateVars = {
-    username: req.cookies["username"]
-  };
-  res.render("urls_new", templateVars);
-});
-
-//create a short URL
-app.post("/urls/new", (req, res) => {
-  let longURL = req.body.longURL;
-  if (!longURL.includes('www')) {
-    longURL = 'http://www.' + longURL;
-  } else if (!longURL.includes('http')) {
-    longURL = 'http://' + longURL;
-  }
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
-  // console.log(urlDatabase);
-  res.redirect('/urls/'+ shortURL);   
-});
-
-// delete a URL
-app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
-})
-
-// individual shortURL page
-app.get("/urls/:id", (req, res) => {
-  let templateVars = {
-    username: req.cookies["username"],
-    shortURL: req.params.id, 
-    urls: urlDatabase 
-  };
-  res.render("urls_show", templateVars)
-})
-
-// update an individual URL
-app.post('/urls/:id', (req, res) => {
-  let newURL = req.body.longURL;
-  let shortURL = req.params.id;
-  if (!newURL.includes('www')) {
-    newURL = 'http://www.' + newURL;
-  } else if (!newURL.includes('http')) {
-    newURL = 'http://' + newURL;
-  }
-  urlDatabase[shortURL] = newURL;
-  res.redirect('/urls');
-});
-
-// redirect to full URL from shortURL
-app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(302, longURL);
-});
-
-// Login form submission
-app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect('/urls');
-});
-
-// Logout button
-app.post('/logout', (req, res) => {
-  res.clearCookie("username");
-  res.redirect('/urls');
 });
 
 // Registration page
@@ -148,20 +87,94 @@ app.post('/register', (req, res) => {
   }
   // Handling registration errors
   if (userName === "") {
-    res.status(404).send('Username not valid. Please go back and <a href="/register">try again</a>.');
+    res.status(400).send('Username not valid. Please go back and <a href="/register">try again</a>.');
   } else if (userEmail === "") {
-    res.status(404).send('Email not valid. Please go back and <a href="/register">try again</a>.');
+    res.status(400).send('Email not valid. Please go back and <a href="/register">try again</a>.');
   } else if ((emailRegistered(userEmail, users) === true)) {  
-    res.status(404).send('Email is already registered. Please go back and <a href="/register">try again</a>.')
+    res.status(400).send('Email is already registered. Please go back and <a href="/register">try again</a>.')
   } else if (userPass === "") {
-    res.status(404).send('You did not enter a password. Please go back and <a href="/register">try again</a>.');
+    res.status(400).send('You did not enter a password. Please go back and <a href="/register">try again</a>.');
   } else { 
     users[userName] = user;
     console.log(users);
-    res.cookie("username", userName);
+    res.cookie("user_id", userID);
     res.redirect('urls');
   }
 });
+
+
+app.get("/urls/new", (req, res) => {
+  let templateVars = {user: findUser(req.cookies['user_id'])};
+  res.render("urls_new", templateVars);
+});
+
+//create a short URL
+app.post("/urls/new", (req, res) => {
+  let longURL = req.body.longURL;
+  if (!longURL.includes('www')) {
+    longURL = 'http://www.' + longURL;
+  } else if (!longURL.includes('http')) {
+    longURL = 'http://' + longURL;
+  }
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = longURL;
+  res.redirect('/urls/'+ shortURL);   
+});
+
+// delete a URL
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+})
+
+// individual shortURL page
+app.get("/urls/:id", (req, res) => {
+  let templateVars = {
+    user: findUser(req.cookies['user_id']),
+    shortURL: req.params.id, 
+    urls: urlDatabase 
+  };
+  res.render("urls_show", templateVars)
+})
+
+// update an individual URL
+app.post('/urls/:id', (req, res) => {
+  let newURL = req.body.longURL;
+  let shortURL = req.params.id;
+  if (!newURL.includes('www')) {
+    newURL = 'http://www.' + newURL;
+  } else if (!newURL.includes('http')) {
+    newURL = 'http://' + newURL;
+  }
+  urlDatabase[shortURL] = newURL;
+  res.redirect('/urls');
+});
+
+// redirect to full URL from shortURL
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(302, longURL);
+});
+
+// Login form submission
+app.post("/login", (req, res) => {
+  let templateVars = {user: findUser(req.cookies['user_id'])};
+  res.redirect('/urls', templateVars);
+});
+
+// Login page
+app.get('/login', (req, res) => {
+  let templateVars = {user: findUser(req.cookies['user_id'])};
+  console.log(templateVars);
+  res.render('login');
+})
+
+// Logout button
+app.post('/logout', (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect('/urls');
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
