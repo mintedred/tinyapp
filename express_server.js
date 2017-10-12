@@ -147,15 +147,18 @@ app.post('/register', (req, res) => {
     }
   }
   // Handling registration errors
-  if (user.email === " ") {
-    res.send(404, 'Email not valid. Please go back and <a href="/register">try again</a>.');
-  } else if (user.password === " ") {
-    res.send(404, 'You did not enter a password. Please go back and <a href="/register">try again</a>.');
-  } else if ((emailRegistered(userEmail, users) === true)) {   
-    res.send(400, 'Email is already registered. Please go back and <a href="/register">try again</a>.')
+  if (userName === "") {
+    res.status(404).send('Username not valid. Please go back and <a href="/register">try again</a>.');
+  } else if (userEmail === "") {
+    res.status(404).send('Email not valid. Please go back and <a href="/register">try again</a>.');
+  } else if ((emailRegistered(userEmail, users) === true)) {  
+    res.status(404).send('Email is already registered. Please go back and <a href="/register">try again</a>.')
+  } else if (userPass === "") {
+    res.status(404).send('You did not enter a password. Please go back and <a href="/register">try again</a>.');
   } else { 
     users[userName] = user;
-    res.cookie("username", req.body.username);
+    console.log(users);
+    res.cookie("username", userName);
     res.redirect('urls');
   }
 });
