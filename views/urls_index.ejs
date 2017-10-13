@@ -6,9 +6,12 @@
 <body>
 
 <% include partials/_header %>
+
+  <hr>
+
   <ul>
     <% for (key in urls) { %>
-      <li><%= key %> : <%= urls[key] %> </li> <a href="/urls/<%= key %>">Edit</a> <form method="POST" action="/urls/<%= key %>/delete"><button value="delete" type="submit">Delete</button></form>
+      <li style="margin-top: 1em"><%= key %> :  <%= urls[key].url %> </li> <a href="/urls/<%= key %>">Edit</a> <form method="POST" action="/urls/<%= key %>/delete"><button value="delete" type="submit">Delete</button></form>
     <% }; %>
   </ul>
   

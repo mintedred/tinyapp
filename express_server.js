@@ -11,8 +11,14 @@ app.set("view engine", "ejs");
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    url: "http://www.lighthouselabs.ca",
+    userID: "ramdone223"
+  },
+  "9sm5xK": {
+    url: "http://www.google.com",
+    userID: "ljfs88"
+  }
 };
 
 const users = {
