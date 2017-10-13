@@ -110,7 +110,11 @@ app.get("/urls/new", (req, res) => {
   let templateVars = {
     user: user
   };
-  res.render("urls_new", templateVars);
+  if (!user) {
+    res.redirect('/');
+  } else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 //create a short URL
