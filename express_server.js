@@ -66,7 +66,8 @@ function findUser(cookie, id, users) {
 }
 
 app.get("/urls", (req, res) => {
-  let user = findUser(req.cookies['user_id'], "id", users);  
+  let user = findUser(req.cookies['user_id'], "id", users);
+  console.log(users);  
   let templateVars = {
     user: user,
     urls: urlDatabase
@@ -132,7 +133,9 @@ app.post("/urls/new", (req, res) => {
     longURL = 'http://' + longURL;
   }
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = {};
+  urlDatabase[shortURL].url = longURL;
+  urlDatabase[shortURL].userID = req.cookies['user_id'];
   res.redirect('/urls/'+ shortURL);   
 });
 
@@ -144,13 +147,23 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // individual shortURL page
 app.get("/urls/:id", (req, res) => {
-  let user = findUser(req.cookies['user_id'], "id", users);  
+  let userCookies = req.cookies['user_id'];
+  let user = findUser(userCookies, "id", users); 
+  let shortURL = req.params.id;  
+  let longURL = urlDatabase[shortURL].url;
   let templateVars = {
-    shortURL: req.params.id, 
+    shortURL: shortURL, 
     user: user,
-    urls: urlDatabase 
+    urls: urlDatabase, 
+    longURL: longURL
   };
-  res.render("urls_show", templateVars);
+  console.log(urlDatabase);
+  console.log(users);
+  if (userCookies === urlDatabase[shortURL].userID) {
+    res.render("urls_show", templateVars);
+  } else {
+    res.send('You are not authorized to edit this URL. Go back to the <a href="/">homepage</a>.')
+  }
 });
 
 // update an individual URL
@@ -162,13 +175,13 @@ app.post('/urls/:id', (req, res) => {
   } else if (!newURL.includes('http')) {
     newURL = 'http://' + newURL;
   }
-  urlDatabase[shortURL] = newURL;
+  urlDatabase[shortURL].url = newURL;
   res.redirect('/urls');
 });
 
 // redirect to full URL from shortURL
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].url;
   res.redirect(302, longURL);
 });
 
