@@ -66,13 +66,31 @@ function findUser(cookie, id, users) {
 }
 
 app.get("/urls", (req, res) => {
-  let user = findUser(req.cookies['user_id'], "id", users);
-  console.log(users);  
-  let templateVars = {
-    user: user,
-    urls: urlDatabase
-  };
-  res.render("urls_index", templateVars);
+  let userCookie = req.cookies['user_id'];
+  let user = findUser(userCookie, "id", users);
+  let urls;
+  let urlsForUser = function(cookie) {
+    let list = [];
+    for (url in urlDatabase) {
+      if (cookie === urlDatabase[url].userID) {
+        let includeURL = {};
+        includeURL.short = url;
+        includeURL.long = urlDatabase[url].url;
+        list.push(includeURL);
+      }
+    }
+    return list;
+  }
+  if (userCookie) {
+    urls = urlsForUser(userCookie);
+    let templateVars = {
+      user: user,
+      urls: urls
+    };
+    res.render("urls_index", templateVars);
+  } else {
+    res.send('Please <a href="/register">Register</a> or <a href="/login">Login</a>' )
+  }
 });
 
 app.get("/", (req, res) => {
