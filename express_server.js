@@ -54,14 +54,15 @@ const findValue = (value, valueKey, obj) => {
 function findUser(cookie, id, users) {
   for (user in users) {
     if (users[user][id] === cookie) {
-      return users[user];
+      return user;
     }
   }
 }
 
 app.get("/urls", (req, res) => {
+  let user = findUser(req.cookies['user_id'], "id", users);  
   let templateVars = {
-    user: findValue(req.cookies['user_id'], "id", users),
+    user: user,
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -105,8 +106,9 @@ app.post('/register', (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
+  let user = findUser(req.cookies['user_id'], "id", users);  
   let templateVars = {
-    user: (findValue(req.cookies['user_id'], "user_id", users))
+    user: user
   };
   res.render("urls_new", templateVars);
 });
@@ -132,9 +134,10 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // individual shortURL page
 app.get("/urls/:id", (req, res) => {
+  let user = findUser(req.cookies['user_id'], "id", users);  
   let templateVars = {
-    user: (findValue(req.cookies['user_id'], "user_id", users)),
     shortURL: req.params.id, 
+    user: user,
     urls: urlDatabase 
   };
   res.render("urls_show", templateVars);
@@ -159,37 +162,6 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(302, longURL);
 });
 
-// Login form page
-app.post("/login", (req, res) => {
-  let templateVars = {
-    users: users
-    // user: (findValue(req.cookies['user_id'], "user_id", users))
-  }; 
-  let currentUser;
-  let submittedEmail = req.body.email;
-  // Verify email
-  if (!findValue(submittedEmail, "email", users)) { 
-    res.status(403).send('User with that email cannot be found. Please <a href="/login">try again</a>.')
-  } else {
-    // Verify password
-      function findUser(submittedEmail) {
-        for (prop in users) {
-          if (users[prop].email === submittedEmail) {
-            return users[prop];
-          }
-        }
-      }
-    currentUser = findUser(submittedEmail);
-    if (currentUser.password === req.body.password) {
-      res.cookie('user_id', currentUser.id);
-      res.redirect('/');
-    } else {
-      res.status(403).send('Wrong password. Please try <a href="/login">again</a>.')
-    }
-  }
-});
-
-
 // Login page
 app.get('/login', (req, res) => {
   let user = findUser(req.cookies['user_id'], "id", users);
@@ -201,7 +173,33 @@ app.get('/login', (req, res) => {
   res.render('login', templateVars);
 });
 
-// Logout button
+// Login form page
+app.post("/login", (req, res) => {
+  let currentUser;
+  let submittedEmail = req.body.email;
+  // Verify email
+  if (!findValue(submittedEmail, "email", users)) { 
+    res.status(403).send('User with that email cannot be found. Please <a href="/login">try again</a>.')
+  } else {
+    // Verify password
+      function findUserEmail(submittedEmail) {
+        for (prop in users) {
+          if (users[prop].email === submittedEmail) {
+            return users[prop];
+          }
+        }
+      }
+    currentUser = findUserEmail(submittedEmail);
+    if (currentUser.password === req.body.password) {
+      res.cookie('user_id', currentUser.id);
+      res.redirect('/');
+    } else {
+      res.status(403).send('Wrong password. Please try <a href="/login">again</a>.')
+    }
+  }
+});
+
+// Logout button in header
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/urls');
