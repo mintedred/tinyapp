@@ -1,7 +1,7 @@
 const morgan = require('morgan');
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 const PORT = process.env.PORT || 8080; // default port 8080
 const app = express();
 app.use(cookieParser());
@@ -49,6 +49,14 @@ const findValue = (value, valueKey, obj) => {
       return true;
     }
   }
+};
+
+function findUser(cookie, id, users) {
+  for (user in users) {
+    if (users[user][id] === cookie) {
+      return users[user];
+    }
+  }
 }
 
 app.get("/urls", (req, res) => {
@@ -61,10 +69,6 @@ app.get("/urls", (req, res) => {
 
 app.get("/", (req, res) => {
   res.redirect("/urls");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
 });
 
 // Registration page
@@ -158,23 +162,23 @@ app.get("/u/:shortURL", (req, res) => {
 // Login form page
 app.post("/login", (req, res) => {
   let templateVars = {
-    users: users,
-    user: (findValue(req.cookies['user_id'], "user_id", users))
+    users: users
+    // user: (findValue(req.cookies['user_id'], "user_id", users))
   }; 
   let currentUser;
   let submittedEmail = req.body.email;
   // Verify email
-  if (findValue(submittedEmail, "email", users) === false) { 
+  if (!findValue(submittedEmail, "email", users)) { 
     res.status(403).send('User with that email cannot be found. Please <a href="/login">try again</a>.')
   } else {
-    // Verify email
-    function findUser(submittedEmail) {
-      for (prop in users) {
-        if (users[prop].email === submittedEmail) {
-          return users[prop];
+    // Verify password
+      function findUser(submittedEmail) {
+        for (prop in users) {
+          if (users[prop].email === submittedEmail) {
+            return users[prop];
+          }
         }
       }
-    }
     currentUser = findUser(submittedEmail);
     if (currentUser.password === req.body.password) {
       res.cookie('user_id', currentUser.id);
@@ -185,12 +189,13 @@ app.post("/login", (req, res) => {
   }
 });
 
+
 // Login page
 app.get('/login', (req, res) => {
+  let user = findUser(req.cookies['user_id'], "id", users);
   let templateVars = {
     cookies: req.cookies['user_id'],
-    // users: users,
-    user: (findValue(req.cookies['user_id'], "user_id", users))  
+    user: user
   };
   console.log(templateVars);
   res.render('login', templateVars);
