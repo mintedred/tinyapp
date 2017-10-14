@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link href="/style.css" rel="stylesheet" type="text/css">
+  <meta charset="UTF-8">
+  <meta name="description" content="Shorten URLS">
   <title>TinyApp</title>
+
 </head>
 <body>
 
 <% include partials/_header %>
 
-  <ul>
+  <ul id="url-list">
     <% urls.forEach(function(link) { %>
-      <li style="margin-top: 1em">
-        <%= link.short %> =  <%= link.long %> 
-      </li> <a href="/urls/<%= link.short %>">Edit</a> 
+      <li>
+        <span class="short"><%= link.short %></span> =  <%= link.long %> 
+      <a href="/urls/<%= link.short %>">Edit</a> 
       <form method="POST" action="/urls/<%= link.short %>/delete">
         <button value="delete" type="submit">Delete</button>
+      </li>
       </form>
     <% }); %>
   </ul>

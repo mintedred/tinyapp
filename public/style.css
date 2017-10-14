@@ -1,0 +1,112 @@
+body {
+	font-size: 1em;
+  background: rgb(230, 244, 249);
+  font-family: Georgia, Times, Times New Roman, serif;
+  color: white;
+  background: #5E6B72;
+  text-align: center;
+  padding: 2em;
+  max-width: 600px;
+  margin: 2em auto;
+  line-height: 1.6
+} 
+
+a {
+  color: #fdd1b0;
+  text-decoration: none;
+  font-style: italic;
+  font-size: 90%;
+}
+
+ul {
+  list-style: none;
+  display: block;
+  padding: 0;
+}
+
+li {
+  display: inline-block;
+}
+li a {
+  display: inline-block;
+  margin: .5em;
+  border-bottom: 1px dashed rgba(253, 209, 176, .4); */
+  padding: 0 .15em;
+}
+
+li a:hover {
+  border-bottom: 1px solid rgba(253, 209, 176, .4); */
+}
+
+header {
+  padding-bottom: 2em;
+
+}
+
+header a {
+  /* font-weight: bold; */
+}
+
+header p {
+  font-size: 120%;
+  display: inline-block;
+}
+
+form {
+  margin: 2em;
+}
+form div {
+  margin: .5em;
+}
+
+form label {
+  font-size: 85%
+}
+
+header form {
+  display: inline-block;
+}
+input {
+  padding: .45em;
+  margin: .25em;
+  border: 1px solid #aaa;
+  -webkit-border-radius: 2px;
+  border-radius: 2px; 
+}
+
+input[type=submit] {
+  padding: .25em .5em;
+  color: #ccc; 
+  background: none;
+  cursor:pointer;
+  margin: -1em 0 0 1em;
+  display: inline-block;
+}
+
+#url-list {
+  font-style: italic;
+}
+
+.short {
+  font-weight: bold;
+  font-style: italic;
+}
+
+#url-list a {
+  display: inline-block;
+}
+
+#url-list form {
+  display: inline-block;
+  margin: 0;
+}
+
+#url-list button {  
+  padding: .25em .5em;
+  color: #ccc; 
+  cursor:pointer;
+  background: none;
+  border: 1px solid #aaa;
+  border: 1px solid #aaa;
+  -webkit-border-radius: 2px;
+}

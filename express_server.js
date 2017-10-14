@@ -5,6 +5,7 @@ const cookieSession = require('cookie-session')
 const bcrypt = require('bcrypt');
 const PORT = process.env.PORT || 8080; // default port 8080
 const app = express();
+app.use(express.static(__dirname + '/public'));
 app.use(cookieSession({
   name: 'session',
   keys: ["secret123"],
