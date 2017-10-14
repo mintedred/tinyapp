@@ -75,15 +75,17 @@ const findURL = (short, obj) => {
   for (prop in obj) {
     if (prop === short) {
       return true;
-    } else {
-      return false;
-    }
+    } 
   }
 }
 
 app.get("/", (req, res) => {
-  if (!req.session.user_id) {
-    res.redirect('/login');
+  let email = findEmail(req.session.user_id, "id", "email", users);   
+  let templateVars = {
+    email: email
+  };
+  if (!email) {
+    res.render('login', templateVars);
   } else {
   res.redirect("/urls");
   }
@@ -124,24 +126,25 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
   let userID = generateRandomString();
-  // let userName = req.body.username;
   let userEmail = req.body.email;
-  let userPass = bcrypt.hashSync(req.body.password, 10);
   let user = {};
   user.id = userID;
   user.email = userEmail;
-  user.password = userPass;
 
-  // Handling registration errors
+  // Check valid email submission
   if (userEmail === "") {
     res.status(400).send('Email not valid. Please go back and <a href="/register">try again</a>.');
   } else if (findValue(userEmail, "email", users) === true) {  
     res.status(400).send('Email is already registered. Please go back and <a href="/register">try again</a>.')
-  } else if (userPass === "") {
+  } 
+  // If password is valid, register the user
+  let userPass = req.body.password;
+  if (userPass === "") {
     res.status(400).send('You did not enter a password. Please go back and <a href="/register">try again</a>.');
   } else { 
+    userPass = bcrypt.hashSync(userPass, 10);
+    user.password = userPass;
     users[userID] = user;
-    console.log(users)
     req.session.user_id = userID;
     res.redirect('urls');
   }
@@ -151,7 +154,6 @@ app.post('/register', (req, res) => {
 app.get("/urls/new", (req, res) => {
   let userCookie = req.session.user_id;
   let email = findEmail(userCookie, "id", "email", users);
-  console.log(email);
   let templateVars = {
     email: email
   }
@@ -193,9 +195,7 @@ app.get("/urls/:id", (req, res) => {
   let userCookie = req.session.user_id;
   let email = findEmail(userCookie, "id", "email", users);
   let shortURL = req.params.id;  
-  if (!findURL(shortURL)) {
-    res.send('This is not a valid short URL. Please try <a href="/">again</a>.');
-  } else {
+  if (findURL(shortURL, urlDatabase)) {
     let longURL = urlDatabase[shortURL].url;
     let templateVars = {
       shortURL: shortURL, 
@@ -206,8 +206,10 @@ app.get("/urls/:id", (req, res) => {
     if (userCookie === urlDatabase[shortURL].userID) {
       res.render("urls_show", templateVars);
     } else {
-      res.send('You are not authorized to edit this URL. Go back to the <a href="/">homepage</a>.')
-    }
+      res.send('You are not authorized to edit this URL. Go back to the <a href="/">homepage</a>.');
+    } 
+  } else {
+    res.send('This is not a valid short URL. Please try <a href="/">again</a>.');   
   }
 });
 
@@ -227,7 +229,7 @@ app.post('/urls/:id', (req, res) => {
 // redirect to full URL from shortURL
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
-  if (!findURL(shortURL)) {
+  if (!findURL(shortURL, urlDatabase)) {
     res.send('This is not a valid short URL. Please try <a href="/">again</a>.');
   } else {
     let longURL = urlDatabase[shortURL].url;
@@ -237,13 +239,15 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Login page
 app.get('/login', (req, res) => {
-  let userCookie = req.session.user_id;
-  let email = findEmail(userCookie, "id", "email", users);
+  let email = findEmail(req.session.user_id, "id", "email", users);   
   let templateVars = {
-    cookies: userCookie,
     email: email
   };
-  res.render('login', templateVars);
+  if (!email) {
+    res.render('login', templateVars);
+  } else {
+    res.redirect("/urls");
+  }
 });
 
 // Login form page

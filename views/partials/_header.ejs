@@ -1,6 +1,5 @@
 <header>
-  <title>URL shortener</title>
-
+ 
   <% if (!email) { %>
     <ul>
       <li><a href="/register">Register</a></li>
@@ -11,7 +10,10 @@
     <form action="/logout" method="POST">
       <input type="submit" value="Logout">
     </form>
-    <hr/>
   <% } %>
-    / <a href="/">Home</a> /
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/urls/new">Shorten a URL</a></li>
+    </nav>
 </header>
