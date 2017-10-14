@@ -63,17 +63,26 @@ const findValue = (value, valueKey, obj) => {
   return false;
 }
 
-const findUser = (cookie, id, users) => {
+const findEmail = (cookie, id, email, users) => {
   for (user in users) {
     if (users[user][id] === cookie) {
-      return user;
+      return (users[user][email]);
     }
   }
 }
 
+app.get("/", (req, res) => {
+  if (!req.session.user_id) {
+    res.redirect('/login');
+  } else {
+  res.redirect("/urls");
+  }
+});
+
+
 app.get("/urls", (req, res) => {
   let userCookie = req.session.user_id
-  let user = findUser(userCookie, "id", users);
+  let email = findEmail(userCookie, "id", "email", users);
   let urls;
   let urlsForUser = function(cookie) {
     let list = [];
@@ -90,17 +99,13 @@ app.get("/urls", (req, res) => {
   if (userCookie) {
     urls = urlsForUser(userCookie);
     let templateVars = {
-      user: user,
-      urls: urls
+      urls: urls,
+      email: email
     };
     res.render("urls_index", templateVars);
   } else {
     res.send('Please <a href="/register">Register</a> or <a href="/login">Login</a>' )
   }
-});
-
-app.get("/", (req, res) => {
-  res.redirect("/urls");
 });
 
 // Registration page
@@ -110,7 +115,7 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
   let userID = generateRandomString();
-  let userName = req.body.username;
+  // let userName = req.body.username;
   let userEmail = req.body.email;
   let userPass = bcrypt.hashSync(req.body.password, 10);
   let user = {};
@@ -119,16 +124,15 @@ app.post('/register', (req, res) => {
   user.password = userPass;
 
   // Handling registration errors
-  if (userName === "") {
-    res.status(400).send('Username not valid. Please go back and <a href="/register">try again</a>.');
-  } else if (userEmail === "") {
+  if (userEmail === "") {
     res.status(400).send('Email not valid. Please go back and <a href="/register">try again</a>.');
   } else if (findValue(userEmail, "email", users) === true) {  
     res.status(400).send('Email is already registered. Please go back and <a href="/register">try again</a>.')
   } else if (userPass === "") {
     res.status(400).send('You did not enter a password. Please go back and <a href="/register">try again</a>.');
   } else { 
-    users[userName] = user;
+    users[userID] = user;
+    console.log(users)
     req.session.user_id = userID;
     res.redirect('urls');
   }
@@ -136,30 +140,37 @@ app.post('/register', (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
-  let user = findUser(req.session.user_id, "id", users);  
+  let userCookie = req.session.user_id;
+  let email = findEmail(userCookie, "id", "email", users);
+  console.log(email);
   let templateVars = {
-    user: user
-  };
+    email: email
+  }
   if (!req.session.user_id) {
-    res.redirect('/');
+    res.redirect('/login');
   } else {
     res.render("urls_new", templateVars);
   }
 });
 
 //create a short URL
-app.post("/urls/new", (req, res) => {
-  let longURL = req.body.longURL;
-  if (!longURL.includes('www')) {
-    longURL = 'http://www.' + longURL;
-  } else if (!longURL.includes('http')) {
-    longURL = 'http://' + longURL;
-  } 
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = {};
-  urlDatabase[shortURL].url = longURL;
-  urlDatabase[shortURL].userID = req.session.user_id;
-  res.redirect('/urls/'+ shortURL);   
+app.post("/urls", (req, res) => {
+  let userCookie = req.session.user_id;
+  if (!userCookie) {
+    res.redirect('/login');
+  } else {
+    let longURL = req.body.longURL;
+    if (!longURL.includes('www')) {
+      longURL = 'http://www.' + longURL;
+    } else if (!longURL.includes('http')) {
+      longURL = 'http://' + longURL;
+    } 
+    let shortURL = generateRandomString();
+    urlDatabase[shortURL] = {};
+    urlDatabase[shortURL].url = longURL;
+    urlDatabase[shortURL].userID = req.session.user_id;
+    res.redirect('/urls/'+ shortURL);   
+  }  
 });
 
 // delete a URL
@@ -170,17 +181,17 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // individual shortURL page
 app.get("/urls/:id", (req, res) => {
-  let userCookies = req.session.user_id;
-  let user = findUser(userCookies, "id", users); 
+  let userCookie = req.session.user_id;
+  let email = findEmail(userCookie, "id", "email", users);
   let shortURL = req.params.id;  
   let longURL = urlDatabase[shortURL].url;
   let templateVars = {
     shortURL: shortURL, 
-    user: user,
+    email: email,
     urls: urlDatabase, 
     longURL: longURL
   };
-  if (userCookies === urlDatabase[shortURL].userID) {
+  if (userCookie === urlDatabase[shortURL].userID) {
     res.render("urls_show", templateVars);
   } else {
     res.send('You are not authorized to edit this URL. Go back to the <a href="/">homepage</a>.')
@@ -202,17 +213,31 @@ app.post('/urls/:id', (req, res) => {
 
 // redirect to full URL from shortURL
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].url;
-  res.redirect(302, longURL);
+  let shortURL = req.params.shortURL;
+  let findURL = (short, obj) => {
+    for (prop in obj) {
+      if (prop === short) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+  if (!findURL(shortURL)) {
+    res.send('This is not a valid short URL. Please try <a href="/">again</a>.');
+  } else {
+    let longURL = urlDatabase[shortURL].url;
+    res.redirect(302, longURL);
+  }
 });
 
 // Login page
 app.get('/login', (req, res) => {
-  let userCookie = req.session.user_id
-  let user = findUser(userCookie, "id", users);
+  let userCookie = req.session.user_id;
+  let email = findEmail(userCookie, "id", "email", users);
   let templateVars = {
     cookies: userCookie,
-    user: user
+    email: email
   };
   res.render('login', templateVars);
 });
@@ -234,10 +259,9 @@ app.post("/login", (req, res) => {
         }
       }
     currentUser = findUserEmail(submittedEmail);
-    console.log(currentUser);
     if (bcrypt.compareSync(req.body.password,currentUser.password)) {
       req.session.user_id = currentUser.id;
-      res.redirect('/');
+      res.redirect('/urls');
     } else {
       res.status(403).send('Wrong password. Please try <a href="/login">again</a>.')
     }

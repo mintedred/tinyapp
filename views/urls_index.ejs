@@ -12,7 +12,7 @@
   <ul>
     <% urls.forEach(function(link) { %>
       <li style="margin-top: 1em">
-        <%= link.short %> :  <%= link.long %> 
+        <%= link.short %> =  <%= link.long %> 
       </li> <a href="/urls/<%= link.short %>">Edit</a> 
       <form method="POST" action="/urls/<%= link.short %>/delete">
         <button value="delete" type="submit">Delete</button>
