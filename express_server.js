@@ -71,6 +71,16 @@ const findEmail = (cookie, id, email, users) => {
   }
 }
 
+const findURL = (short, obj) => {
+  for (prop in obj) {
+    if (prop === short) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
 app.get("/", (req, res) => {
   if (!req.session.user_id) {
     res.redirect('/login');
@@ -81,9 +91,8 @@ app.get("/", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  let userCookie = req.session.user_id
+  let userCookie = req.session.user_id;
   let email = findEmail(userCookie, "id", "email", users);
-  let urls;
   let urlsForUser = function(cookie) {
     let list = [];
     for (url in urlDatabase) {
@@ -96,15 +105,15 @@ app.get("/urls", (req, res) => {
     }
     return list;
   }
-  if (userCookie) {
-    urls = urlsForUser(userCookie);
+  if (!email) {
+    res.send('<a href="/login">Please sign in</a>')
+  } else {    
+    let urls = urlsForUser(userCookie);
     let templateVars = {
       urls: urls,
       email: email
     };
     res.render("urls_index", templateVars);
-  } else {
-    res.send('Please <a href="/register">Register</a> or <a href="/login">Login</a>' )
   }
 });
 
@@ -146,7 +155,7 @@ app.get("/urls/new", (req, res) => {
   let templateVars = {
     email: email
   }
-  if (!req.session.user_id) {
+  if (!email) {
     res.redirect('/login');
   } else {
     res.render("urls_new", templateVars);
@@ -184,17 +193,21 @@ app.get("/urls/:id", (req, res) => {
   let userCookie = req.session.user_id;
   let email = findEmail(userCookie, "id", "email", users);
   let shortURL = req.params.id;  
-  let longURL = urlDatabase[shortURL].url;
-  let templateVars = {
-    shortURL: shortURL, 
-    email: email,
-    urls: urlDatabase, 
-    longURL: longURL
-  };
-  if (userCookie === urlDatabase[shortURL].userID) {
-    res.render("urls_show", templateVars);
+  if (!findURL(shortURL)) {
+    res.send('This is not a valid short URL. Please try <a href="/">again</a>.');
   } else {
-    res.send('You are not authorized to edit this URL. Go back to the <a href="/">homepage</a>.')
+    let longURL = urlDatabase[shortURL].url;
+    let templateVars = {
+      shortURL: shortURL, 
+      email: email,
+      urls: urlDatabase, 
+      longURL: longURL
+    };
+    if (userCookie === urlDatabase[shortURL].userID) {
+      res.render("urls_show", templateVars);
+    } else {
+      res.send('You are not authorized to edit this URL. Go back to the <a href="/">homepage</a>.')
+    }
   }
 });
 
@@ -214,15 +227,6 @@ app.post('/urls/:id', (req, res) => {
 // redirect to full URL from shortURL
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
-  let findURL = (short, obj) => {
-    for (prop in obj) {
-      if (prop === short) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
   if (!findURL(shortURL)) {
     res.send('This is not a valid short URL. Please try <a href="/">again</a>.');
   } else {
