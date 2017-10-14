@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.set("view engine", "ejs");
 
-
+// Links for testing
 const urlDatabase = {
   "b2xVn2": {
     url: "http://www.lighthouselabs.ca",
@@ -27,6 +27,7 @@ const urlDatabase = {
   }
 };
 
+// Fake users for testing
 const users = {
   "user1": {
     id: "ramdone223", 
@@ -54,7 +55,6 @@ function generateRandomString() {
   return text;
 }
 
-
 const findValue = (value, valueKey, obj) => {
   for (prop in obj) {
     if (obj[prop][valueKey] === value) {
@@ -78,6 +78,7 @@ const findURL = (short, obj) => {
       return true;
     } 
   }
+  return false;
 }
 
 app.get("/", (req, res) => {
@@ -88,10 +89,9 @@ app.get("/", (req, res) => {
   if (!email) {
     res.render('login', templateVars);
   } else {
-  res.redirect("/urls");
+    res.redirect("/urls");
   }
 });
-
 
 app.get("/urls", (req, res) => {
   let userCookie = req.session.user_id;
@@ -131,7 +131,6 @@ app.post('/register', (req, res) => {
   let user = {};
   user.id = userID;
   user.email = userEmail;
-
   // Check valid email submission
   if (userEmail === "") {
     res.status(400).send('Email not valid. Please go back and <a href="/register">try again</a>.');
@@ -150,7 +149,6 @@ app.post('/register', (req, res) => {
     res.redirect('urls');
   }
 });
-
 
 app.get("/urls/new", (req, res) => {
   let userCookie = req.session.user_id;
@@ -282,7 +280,6 @@ app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
