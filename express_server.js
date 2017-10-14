@@ -1,11 +1,15 @@
 const morgan = require('morgan');
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session')
 const bcrypt = require('bcrypt');
 const PORT = process.env.PORT || 8080; // default port 8080
 const app = express();
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["secret123"],
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.set("view engine", "ejs");
@@ -56,9 +60,10 @@ const findValue = (value, valueKey, obj) => {
       return true;
     }
   }
-};
+  return false;
+}
 
-function findUser(cookie, id, users) {
+const findUser = (cookie, id, users) => {
   for (user in users) {
     if (users[user][id] === cookie) {
       return user;
@@ -67,7 +72,7 @@ function findUser(cookie, id, users) {
 }
 
 app.get("/urls", (req, res) => {
-  let userCookie = req.cookies['user_id'];
+  let userCookie = req.session.user_id
   let user = findUser(userCookie, "id", users);
   let urls;
   let urlsForUser = function(cookie) {
@@ -124,19 +129,18 @@ app.post('/register', (req, res) => {
     res.status(400).send('You did not enter a password. Please go back and <a href="/register">try again</a>.');
   } else { 
     users[userName] = user;
-    console.log(users);
-    res.cookie("user_id", userID);
+    req.session.user_id = userID;
     res.redirect('urls');
   }
 });
 
 
 app.get("/urls/new", (req, res) => {
-  let user = findUser(req.cookies['user_id'], "id", users);  
+  let user = findUser(req.session.user_id, "id", users);  
   let templateVars = {
     user: user
   };
-  if (!user) {
+  if (!req.session.user_id) {
     res.redirect('/');
   } else {
     res.render("urls_new", templateVars);
@@ -150,11 +154,11 @@ app.post("/urls/new", (req, res) => {
     longURL = 'http://www.' + longURL;
   } else if (!longURL.includes('http')) {
     longURL = 'http://' + longURL;
-  }
+  } 
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {};
   urlDatabase[shortURL].url = longURL;
-  urlDatabase[shortURL].userID = req.cookies['user_id'];
+  urlDatabase[shortURL].userID = req.session.user_id;
   res.redirect('/urls/'+ shortURL);   
 });
 
@@ -166,7 +170,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // individual shortURL page
 app.get("/urls/:id", (req, res) => {
-  let userCookies = req.cookies['user_id'];
+  let userCookies = req.session.user_id;
   let user = findUser(userCookies, "id", users); 
   let shortURL = req.params.id;  
   let longURL = urlDatabase[shortURL].url;
@@ -176,8 +180,6 @@ app.get("/urls/:id", (req, res) => {
     urls: urlDatabase, 
     longURL: longURL
   };
-  console.log(urlDatabase);
-  console.log(users);
   if (userCookies === urlDatabase[shortURL].userID) {
     res.render("urls_show", templateVars);
   } else {
@@ -206,12 +208,12 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Login page
 app.get('/login', (req, res) => {
-  let user = findUser(req.cookies['user_id'], "id", users);
+  let userCookie = req.session.user_id
+  let user = findUser(userCookie, "id", users);
   let templateVars = {
-    cookies: req.cookies['user_id'],
+    cookies: userCookie,
     user: user
   };
-  console.log(templateVars);
   res.render('login', templateVars);
 });
 
@@ -232,8 +234,9 @@ app.post("/login", (req, res) => {
         }
       }
     currentUser = findUserEmail(submittedEmail);
+    console.log(currentUser);
     if (bcrypt.compareSync(req.body.password,currentUser.password)) {
-      res.cookie('user_id', currentUser.id);
+      req.session.user_id = currentUser.id;
       res.redirect('/');
     } else {
       res.status(403).send('Wrong password. Please try <a href="/login">again</a>.')
@@ -243,7 +246,7 @@ app.post("/login", (req, res) => {
 
 // Logout button in header
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
